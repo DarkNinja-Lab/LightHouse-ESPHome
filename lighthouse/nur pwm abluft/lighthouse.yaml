@@ -1,0 +1,106 @@
+esphome:
+  name: lighthouse
+  friendly_name: LightHouse
+  comment: Cannabis GrowZelt
+  project: 
+    name: "Dominic Hahn.LightHouse"
+    version: "2.7.0"
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+api:
+  encryption:
+    key: "ymgujbBVdToiJB/0sZaiX1hpy6Me+8GiGKdjCllDs88="
+
+ota:
+  - platform: esphome
+    password: "59403563711f5cd90c88ca28904a751f"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+web_server:
+  port: 80
+
+logger:
+
+
+
+output:
+  - platform: gpio
+    pin: 21
+    inverted: True
+    id: umluft
+
+  - platform: ledc
+    pin: 5
+    id: abluft_out
+    frequency: 1000 Hz
+  
+  - platform: gpio
+    pin: 19
+    id: luftbefeuchter
+    inverted: True
+
+  - platform: gpio
+    pin: 18
+    id: relay
+    inverted: True
+    
+light:
+  - platform: binary
+    name: "MarsHydro TS-600"
+    id: marshydro
+    output: relay
+    icon: "mdi:spotlight"
+
+button:
+  - platform: restart
+    name: "Restart"
+  
+  - platform: output
+    duration: 0.5s
+    name: "Luftbefeuchter"
+    output: luftbefeuchter
+    icon: "mdi:air-humidifier"
+
+fan:
+  - platform: binary
+    output: umluft
+    name: "Umluft"
+
+  - platform: speed
+    output: abluft_out
+    name: "Abluft"
+    speed_count: 5
+    restore_mode: ALWAYS_OFF
+
+
+sensor:
+  - platform: dht
+    pin: GPIO4
+    model: DHT11
+    temperature:
+      name: "Temperatur"
+      id: lighthouse_temp
+    humidity:
+      name: "Luftfeuchtigkeit"
+
+  - platform: wifi_signal
+    name: "WiFi Signal dB"
+    internal: True
+    id: wifi_signal_db
+    update_interval: 10s
+
+  - platform: copy
+    source_id: wifi_signal_db
+    name: "WiFi Signal"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    unit_of_measurement: "%"
+    entity_category: "diagnostic"
+    device_class: ""
